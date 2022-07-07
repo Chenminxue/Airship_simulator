@@ -33,6 +33,8 @@ class LithiumBattery(Battery):
 
     # Working statues
     workingStatus = 0
+    # Charging power from solar and fuel cell battery
+    beingChargedPower = 0
 
     def __init__(self, maxCapacity, maxPower):
         super().__init__(maxCapacity, maxPower)
@@ -64,14 +66,12 @@ class LithiumBattery(Battery):
             temp = (self.socPercent - 20) / abs(self.socPercent - 20)
             temp = int(temp)
             self.currentPower = max(0, temp) * self.maxPower
-            print('lithium battery working power: %.2f\n' % self.currentPower)
 
         # Between 20 % and 40 %, the lithium battery doesn't work
         elif LithiumBattery.workingStatus == 2:
             temp = (self.socPercent - 40) / abs(self.socPercent - 40)
             temp = int(temp)
             self.currentPower = max(0, temp) * self.maxPower
-            print('lithium battery working power: %.2f\n' % self.currentPower)
 
         # Between 40 % and 60 %, the lithium battery works on demand
         elif LithiumBattery.workingStatus == 3:
@@ -79,17 +79,14 @@ class LithiumBattery(Battery):
                 self.currentPower = self.maxPower
             else:
                 self.currentPower = self.realDemandPower
-            print('lithium battery working power: %.2f\n' % self.currentPower)
 
         # Between 60 % and 80 %, the lithium battery works all the time
         elif LithiumBattery.workingStatus == 4:
             self.currentPower = self.maxPower
-            print('lithium battery working power: %.2f\n' % self.currentPower)
 
         # Between 80 % and 100 %, the lithium battery works all the time
         elif LithiumBattery.workingStatus == 5:
             self.currentPower = self.maxPower
-            print('lithium battery working power: %.2f\n' % self.currentPower)
 
 
 class FuelCell(Battery):
@@ -98,41 +95,32 @@ class FuelCell(Battery):
     # Current power of the fuel call
     def checkCurrentPower(self, lb_workingStatus):
 
+        if self.maxPower < self.realDemandPower:
+            self.currentPower = self.maxPower
+        else:
+            self.currentPower = self.realDemandPower
+
         # Less than 20 %, the lithium battery doesn't work
         if lb_workingStatus == 1:
             if self.maxPower < self.realDemandPower:
-                self.currentPower = self.maxPower
-                print('Fuel cell working power: %.2f\n' % self.currentPower)
-                print('Lithium battery is being charged with power: %.2f\n' % self.currentPower)
+                LithiumBattery.beingChargedPower = self.maxPower
             else:
-                self.currentPower = self.realDemandPower
-                print('Fuel cell working power: %.2f\n' % self.currentPower)
-                print('Lithium battery is being charged with power: %.2f\n' % self.currentPower)
+                LithiumBattery.beingChargedPower = self.realDemandPower
 
         # Between 20 % and 40 %, the lithium battery doesn't work
         if lb_workingStatus == 2:
             if self.maxPower < self.realDemandPower:
-                self.currentPower = self.maxPower
-                print('Fuel cell working power: %.2f\n' % self.currentPower)
-                print('Lithium battery is being charged with power: %.2f\n' % self.currentPower)
+                LithiumBattery.beingChargedPower = self.maxPower
             else:
-                self.currentPower = self.realDemandPower
-                print('Fuel cell working power: %.2f\n' % self.currentPower)
-                print('Lithium battery is being charged with power: %.2f\n' % self.currentPower)
+                LithiumBattery.beingChargedPower = self.realDemandPower
 
         # Between 40% and 60%, the lithium battery works on demand
         if lb_workingStatus == 3:
             if self.maxPower < self.realDemandPower:
-                self.currentPower = self.maxPower
-                print('Fuel cell working power: %.2f\n' % self.currentPower)
-                print('Lithium battery is being charged with power: %.2f\n' % self.currentPower)
+                LithiumBattery.beingChargedPower = self.maxPower
             else:
-                self.currentPower = self.realDemandPower
-                print('Fuel cell working power: %.2f\n' % self.currentPower)
-                print('Lithium battery is being charged with power: %.2f\n' % self.currentPower)
+                LithiumBattery.beingChargedPower = self.realDemandPower
 
         # lithium battery remaining power between 60% and 100%, the fuel cell doesn't work
         if lb_workingStatus == 4 or lb_workingStatus == 5:
-            self.currentPower = 0
-            print('Fuel cell working power: %.2f\n' % self.currentPower)
-            print('Lithium battery is being charged with power: %.2f\n' % self.currentPower)
+            LithiumBattery.beingChargedPower = 0

@@ -11,7 +11,7 @@ MAX_FUELBATTERY_CAPACITY = 50000
 # Fuel battery power(W)
 MAX_FUELBATTERY_POWER = 20
 
-TOTAL_DEMAND_POWER = 5
+TOTAL_DEMAND_POWER = 7
 
 # Air density(kg/m3)
 P = 1.293
@@ -39,29 +39,41 @@ class Ship(object):
         self.fuelBattery.realDemandPower = realDemandPower
 
     def updateBattery(self):
+        self.lithiumBattery.checkCurrentPower()
+        self.fuelBattery.checkCurrentPower(self.lithiumBattery.workingStatus)
+
+        # 0 % ~ 20 %
         if self.lithiumBattery.workingStatus == 1:
             if (20 - self.lithiumBattery.socPercent) / 100 * self.lithiumBattery.currentCapacity < self.fuelBattery.currentCapacity:
-                self.fuelBattery.currentCapacity -= (20 - self.lithiumBattery.socPercent) / 100 * self.lithiumBattery.currentCapacity
+                self.fuelBattery.currentCapacity -= (20 - self.lithiumBattery.socPercent) / 100 * self.lithiumBattery.maxCapacity
                 self.lithiumBattery.currentCapacity = 0.2 * self.lithiumBattery.maxCapacity
+                self.lithiumBattery.socPercent = 20
                 self.lithiumBattery.workingStatus = 2
             else:
                 print("Not enough Fuel cell energy.")
 
+        # 20 % ~ 40 %
         elif self.lithiumBattery.workingStatus == 2:
             if (40 - self.lithiumBattery.socPercent) / 100 * self.lithiumBattery.currentCapacity < self.fuelBattery.currentCapacity:
-                self.fuelBattery.currentCapacity -= (40 - self.lithiumBattery.socPercent) / 100 * self.lithiumBattery.currentCapacity
+                self.fuelBattery.currentCapacity -= (40 - self.lithiumBattery.socPercent) / 100 * self.lithiumBattery.maxCapacity
                 self.lithiumBattery.currentCapacity = 0.4 * self.lithiumBattery.maxCapacity
+                self.lithiumBattery.socPercent = 40
                 self.lithiumBattery.workingStatus = 3
+
             else:
                 print("Not enough Fuel cell energy.")
 
+        # 40 % ~ 60 %
         elif self.lithiumBattery.workingStatus == 3:
             if (60 - self.lithiumBattery.socPercent) / 100 * self.lithiumBattery.currentCapacity < self.fuelBattery.currentCapacity:
-                self.fuelBattery.currentCapacity -= (60 - self.lithiumBattery.socPercent) / 100 * self.lithiumBattery.currentCapacity
+                self.fuelBattery.currentCapacity -= (60 - self.lithiumBattery.socPercent) / 100 * self.lithiumBattery.maxCapacity
                 self.lithiumBattery.currentCapacity = 0.6 * self.lithiumBattery.maxCapacity
+                self.lithiumBattery.socPercent = 60
                 self.lithiumBattery.workingStatus = 4
             else:
                 print("Not enough Fuel cell energy.")
 
+        # 60 % ~ 100 %
         else:
+            self.lithiumBattery.socPercent = 80
             print("lithium battery is not charging.")

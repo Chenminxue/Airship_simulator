@@ -1,5 +1,7 @@
 import os
 import time
+
+from Airship_simulator.Battery import LithiumBattery
 from Ship import Ship
 
 
@@ -10,7 +12,6 @@ class Simulator(object):
 
         # Object ship
         self.ship = Ship()
-        self.realDemandPower = 0
 
     # Showing the input error info
     @staticmethod
@@ -93,6 +94,8 @@ class Simulator(object):
 
         # Real demand power
         self.ship.updateRealDemandPower()
+        self.ship.lithiumBattery.checkCurrentPower()
+        self.ship.fuelBattery.checkCurrentPower(LithiumBattery.workingStatus)
 
     # Start the simulation
     def startSimulation(self):
@@ -101,15 +104,27 @@ class Simulator(object):
         os.system('pause')
         os.system('cls' if os.name == 'nt' else 'clear')
 
-        self.ship.lithiumBattery.checkCurrentPower()
-        self.ship.fuelBattery.checkCurrentPower(self.ship.lithiumBattery.workingStatus)
         self.update()
 
     def update(self):
         while True:
             os.system('cls' if os.name == 'nt' else 'clear')
+
+            print("-" * 20)
+            print("Real demand Power %.2f W\n" % self.ship.lithiumBattery.realDemandPower)
+
+            print("lithium battery SOC {:.2%}".format(self.ship.lithiumBattery.socPercent/100))
+            print("Lithium battery current power %.2f W" % self.ship.lithiumBattery.currentPower)
+            print("lithium battery capacity %.2f A.h" % self.ship.lithiumBattery.currentCapacity)
+            print("lithium battery is being charged with %.2f W\n" % LithiumBattery.beingChargedPower)
+
+            print("Fuel battery SOC {:.2%}" .format(self.ship.fuelBattery.socPercent/100))
+            print("Fuel battery current power %.2f W" % self.ship.fuelBattery.currentPower)
+            print("Fuel battery capacity %.2f A.h" % self.ship.fuelBattery.currentCapacity)
+            print("-" * 20)
+            print("\n\n")
+
             self.ship.updateBattery()
-            self.ship.fuelBattery.checkCurrentPower(self.ship.lithiumBattery.workingStatus)
-            time.sleep(1)
+            time.sleep(10)
             if self.ship.lithiumBattery.workingStatus == 5:
                 break
